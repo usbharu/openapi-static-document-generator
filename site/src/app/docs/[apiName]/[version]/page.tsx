@@ -4,7 +4,7 @@ import {getApiData, getApiSpec} from "@/lib/api-loader";
 import {notFound} from "next/navigation";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
-import {getMethodBadgeColor} from "@/lib/utils";
+import {encodeToBase64Url, getMethodBadgeColor} from "@/lib/utils";
 
 // ... (generateStaticParams, getApiSpec functions are unchanged) ...
 
@@ -71,12 +71,22 @@ export default async function ApiDocumentPage({params}: PageProps) {
                                     (
                                         <TableRow key={path}>
                                             <TableCell>
-                                                <a href={`${p.version}/endpoints/${encodeURIComponent(path.substring(1))}`} className={"text-lg font-semibold"}>{path}</a>
+                                                <a href={`${p.version}/endpoints/${encodeToBase64Url(path.substring(1))}`} className={"text-lg font-semibold"}>{path}</a>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className={"flex gap-1"}>
                                                 {
-                                                    Object.entries(methods).map(([value, operation]) => {
-                                                        const encodedPath = encodeURIComponent(path.substring(1));
+                                                    Object.entries(methods).sort(([aKey,a], [bKey,b]) =>  {
+                                                        // 基準となる順序を配列で定義
+                                                        const order = ['get', 'post', 'delete', 'put', 'patch'];
+
+                                                        // 大文字・小文字を区別しないように小文字に変換
+                                                        const lowerA = aKey.toLowerCase();
+                                                        const lowerB = bKey.toLowerCase();
+
+                                                        // 配列内でのインデックスの差を返す
+                                                        return order.indexOf(lowerA) - order.indexOf(lowerB);
+                                                    }).map(([value, operation]) => {
+                                                        const encodedPath = encodeToBase64Url(path.substring(1));
                                                         return <a key={`${path}-${value}`}
                                                                 href={`${p.version}/endpoints/${encodedPath}#endpoint-${value}-${encodedPath}`}><Badge
 

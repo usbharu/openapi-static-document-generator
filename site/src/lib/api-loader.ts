@@ -28,13 +28,21 @@ let apiSpecCache: ApiSpecMap | undefined = undefined
 
 type ApiSpecMap = {
     [name: string]: {
-        [version: string]: OpenAPISpec
+        [version: string]: {
+            spec: OpenAPISpec
+            examples: {
+                [schemaName: string]: {
+                    description: string,
+                    value: any
+                }[]
+            }
+        }
     }
 }
 
 export function getApiSpec(apiName: string, version: string): OpenAPISpec | undefined {
     if (apiSpecCache) {
-        return apiSpecCache[apiName][version]
+        return apiSpecCache[apiName][version].spec
     }
     const {apis} = getApiData();
     apiSpecCache = {}
@@ -44,9 +52,19 @@ export function getApiSpec(apiName: string, version: string): OpenAPISpec | unde
         apiSpecCache[name.name] = {}
         name.versions.map(version => {
             // @ts-ignore
-            return apiSpecCache[name.name][version.version] = version.spec;
+            return apiSpecCache[name.name][version.version] = {spec: version.spec, examples: version.schemaExamples};
         })
 
     });
-    return apiSpecCache[apiName][version]
+    return apiSpecCache[apiName][version].spec
+}
+
+export function getApiExamples(apiName: string, version: string, schemaName: string): {
+    description: string,
+    value: any
+}[] {
+    if (!apiSpecCache) {
+        getApiSpec(apiName, version)
+    }
+    return apiSpecCache[apiName][version].examples[schemaName]
 }

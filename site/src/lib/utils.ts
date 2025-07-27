@@ -26,3 +26,6 @@ export const getMethodBadgeColor = (method: string) => {
       return "bg-gray-600 hover:bg-gray-700";
   }
 };
+
+export const encodeToBase64Url = (str: string) => Buffer.from(str).toString('base64url');
+export const decodeFromBase64Url = (str: string) => Buffer.from(str, 'base64url').toString('utf-8');

@@ -3,11 +3,13 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/usbharu/openapi-static-document-generator/cli/internal/parser"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // --- 新しいデータ構造の定義 ---
@@ -22,8 +24,14 @@ type API struct {
 }
 
 type Version struct {
-	Version string      `json:"version"`
-	Spec    interface{} `json:"spec"` // OpenAPIの中身をそのまま格納
+	Version        string               `json:"version"`
+	Spec           interface{}          `json:"spec"` // OpenAPIの中身をそのまま格納
+	SchemaExamples map[string][]Example `json:"schemaExamples"`
+}
+
+type Example struct {
+	Description string      `json:"description"`
+	Value       interface{} `json:"value"`
 }
 
 // GenerateJSON は解析済みのドキュメントを受け取り、単一のJSONファイルとして出力します。
@@ -65,9 +73,12 @@ func aggregateDocs(docs []*parser.APIDocument) (*SiteData, error) {
 			return nil, fmt.Errorf("API仕様のデコードに失敗 (%s, %s): %w", doc.APIName, doc.Version, err)
 		}
 
+		allExamples := extractSchemaData(doc.Doc)
+
 		version := Version{
-			Version: doc.Version,
-			Spec:    specData,
+			Version:        doc.Version,
+			Spec:           specData,
+			SchemaExamples: allExamples,
 		}
 		apiMap[doc.APIName] = append(apiMap[doc.APIName], version)
 	}
@@ -83,4 +94,147 @@ func aggregateDocs(docs []*parser.APIDocument) (*SiteData, error) {
 	sort.Slice(siteApis, func(i, j int) bool { return siteApis[i].Name < siteApis[j].Name })
 
 	return &SiteData{APIs: siteApis}, nil
+}
+
+// schemaDataCollector はスキーマ名に基づいてExampleとDescriptionを収集します。
+type schemaDataCollector struct {
+	// 同じスキーマに複数のdescriptionが見つかる場合があるため、値はスライスにする
+
+	examples map[string][]Example
+}
+
+// newSchemaDataCollector は新しいコレクターを初期化します。
+func newSchemaDataCollector() *schemaDataCollector {
+	return &schemaDataCollector{
+
+		examples: make(map[string][]Example),
+	}
+}
+
+// addExamples はExample/Examplesを追加します。
+func (c *schemaDataCollector) addExamples(schemaName string, example Example, examples map[string]*openapi3.ExampleRef) {
+	if schemaName == "" {
+		return
+	}
+	var collected []Example
+	if example.Value != nil {
+		collected = append(collected, example)
+	}
+	for _, exRef := range examples {
+		if exRef != nil && exRef.Value != nil && exRef.Value.Value != nil {
+			collected = append(collected, Example{
+				Description: exRef.Value.Description,
+				Value:       exRef.Value.Value,
+			})
+		}
+	}
+	if len(collected) > 0 {
+		c.examples[schemaName] = append(c.examples[schemaName], collected...)
+	}
+}
+
+// getSchemaNameFromRef は $ref 文字列からスキーマ名を抽出します (例: "#/components/schemas/User" -> "User")
+func getSchemaNameFromRef(ref string) string {
+	if !strings.HasPrefix(ref, "#/components/schemas/") {
+		return ""
+	}
+	return strings.TrimPrefix(ref, "#/components/schemas/")
+}
+
+// extractSchemaData は仕様書全体を探索し、スキーマ名に紐づくデータを収集します。
+func extractSchemaData(doc *openapi3.T) map[string][]Example {
+	collector := newSchemaDataCollector()
+
+	// 1. Components内のスキーマ定義そのものからdescriptionを収集
+	if doc.Components != nil && doc.Components.Schemas != nil {
+		for name, schemaRef := range doc.Components.Schemas {
+			if schemaRef != nil && schemaRef.Value != nil {
+				//collector.addDescription(name, schemaRef.Value.Description)
+				collector.addExamples(name,
+					Example{
+						Description: schemaRef.Value.Description,
+						Value:       schemaRef.Value.Example,
+					}, nil)
+			}
+		}
+	}
+
+	// 2. Paths内を探索して、スキーマが「使われている場所」の情報を収集
+	if doc.Paths != nil {
+		for _, pathItem := range doc.Paths.Map() {
+			if pathItem == nil {
+				continue
+			}
+
+			operations := map[string]*openapi3.Operation{
+				"GET": pathItem.Get, "POST": pathItem.Post, "PUT": pathItem.Put,
+				"DELETE": pathItem.Delete, "PATCH": pathItem.Patch,
+			}
+
+			for _, op := range operations {
+				if op == nil {
+					continue
+				}
+
+				// Parameters
+				for _, paramRef := range op.Parameters {
+					if paramRef == nil || paramRef.Value == nil {
+						continue
+					}
+					if paramRef.Value.Schema != nil {
+						schemaName := getSchemaNameFromRef(paramRef.Value.Schema.Ref)
+						//collector.addDescription(schemaName, paramRef.Value.Description)
+						collector.addExamples(schemaName, Example{
+							Description: paramRef.Value.Description,
+							Value:       paramRef.Value.Example,
+						}, paramRef.Value.Examples)
+					}
+				}
+
+				// RequestBody
+				if op.RequestBody != nil && op.RequestBody.Value != nil {
+					//collector.addDescriptionToContent(op.RequestBody.Value.Content, op.RequestBody.Value.Description)
+					collector.addExampleToContent(op.RequestBody.Value.Content)
+				}
+
+				// Responses
+				if op.Responses != nil {
+					for _, respRef := range op.Responses.Map() {
+						if respRef != nil && respRef.Value != nil {
+							//collector.addDescriptionToContent(respRef.Value.Content, respRef.Value.Description)
+							collector.addExampleToContent(respRef.Value.Content)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return collector.examples
+}
+
+// addDescriptionToContent はContentオブジェクト内のスキーマに説明を追加します。
+func (c *schemaDataCollector) addDescriptionToContent(content openapi3.Content) {
+	if content == nil {
+		return
+	}
+	for _, mediaType := range content {
+		if mediaType != nil && mediaType.Schema != nil {
+			_ = getSchemaNameFromRef(mediaType.Schema.Ref)
+			//c.addDescription(schemaName, description)
+		}
+	}
+}
+
+// addExampleToContent はContentオブジェクト内のスキーマにExampleを追加します。
+func (c *schemaDataCollector) addExampleToContent(content openapi3.Content) {
+	if content == nil {
+		return
+	}
+	for mimeType, mediaType := range content {
+		if mediaType != nil && mediaType.Schema != nil {
+			schemaName := getSchemaNameFromRef(mediaType.Schema.Ref)
+			c.addExamples(schemaName, Example{Description: mimeType, Value: mediaType.Example}, mediaType.Examples)
+		}
+	}
 }

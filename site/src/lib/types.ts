@@ -10,9 +10,8 @@ export interface API {
 
 export interface Version {
     version: string;
-    // spec は OpenAPI の仕様そのものなので、
-    // 現時点では汎用的な any 型としておきます。
     spec: OpenAPISpec;
+    schemaExamples: {[path:string]: any}
 }
 
 /**
@@ -102,19 +101,6 @@ export interface MediaType {
     };
 }
 
-// // Schemaオブジェクト
-// export interface Schema {
-//     type?: 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
-//     format?: string;
-//     description?: string;
-//     properties?: {
-//         [propertyName: string]: Schema;
-//     };
-//     required?: string[];
-//     items?: Schema; // for array type
-//     $ref?: string; // スキーマ参照
-// }
-
 // componentsオブジェクト
 export interface Components {
     schemas?: {
@@ -122,8 +108,6 @@ export interface Components {
     };
 }
 
-
-// --- ↓↓↓ ファイルの末尾にこれを追記 ↓↓↓ ---
 
 export interface SchemaProperty {
     $ref?: string;

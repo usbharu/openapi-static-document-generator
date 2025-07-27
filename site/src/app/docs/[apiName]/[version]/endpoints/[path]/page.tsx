@@ -2,7 +2,7 @@ import {getApiData, getApiSpec} from "@/lib/api-loader";
 import {notFound} from "next/navigation";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
-import {getMethodBadgeColor} from "@/lib/utils";
+import {decodeFromBase64Url, encodeToBase64Url, getMethodBadgeColor} from "@/lib/utils";
 import {EndpointGroup} from "@/components/endpoint/EndpointGroup";
 
 export async function generateStaticParams() {
@@ -17,11 +17,12 @@ export async function generateStaticParams() {
                 {
                     apiName: api.name,
                     version: version.version,
-                    path: path.substring(1)
+                    path: encodeToBase64Url(path.substring(1))
                 }
             ));
         });
     });
+    console.log(a)
     return a
 }
 
@@ -34,7 +35,7 @@ type PathApiDocumentPageProps = {
 
 export default async function PathApiDocument({params}: PathApiDocumentPageProps) {
     const p = await params;
-    const pathString = "/" + decodeURIComponent(p.path)
+    const pathString = "/" + decodeFromBase64Url(p.path)
     const spec = getApiSpec(p.apiName, p.version);
     const path = spec?.paths[pathString]
     console.log(path)
