@@ -1,92 +1,87 @@
 "use client";
 
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 } from "@/components/ui/select";
-import {MediaType, OpenAPISpec, Schema} from "@/lib/types";
-import {useState} from "react";
-import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
-import {vscDarkPlus} from "react-syntax-highlighter/dist/esm/styles/prism";
-import {getSchemaName} from "@/lib/utils";
-import {SchemaLink} from "@/components/SchemaLink";
+import type { MediaType, Schema } from "@/lib/types";
+import { useState } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { getSchemaName } from "@/lib/utils";
+import { SchemaLink } from "@/components/SchemaLink";
 
 interface ResponseViewerProps {
-    mediaType: MediaType;
-    schema?: Schema;
+	mediaType: MediaType;
+	schema?: Schema;
 }
 
-export function ResponseViewer({mediaType, schema}: ResponseViewerProps) {
-    const requestBodySchemaRef =
-        mediaType.schema?.$ref;
-    const exampleSchema = getSchemaName(requestBodySchemaRef);
-    // 1. 単一の `example` があれば、それを表示して終了
-    if (mediaType.example) {
+export function ResponseViewer({ mediaType, schema }: ResponseViewerProps) {
+	const requestBodySchemaRef = mediaType.schema?.$ref;
+	const exampleSchema = getSchemaName(requestBodySchemaRef);
+	// 1. 単一の `example` があれば、それを表示して終了
+	if (mediaType.example) {
+		return (
+			<>
+				{requestBodySchemaRef ? (
+					<div className="p-4 text-sm">
+						Schema: <SchemaLink schemaName={exampleSchema} schema={schema} />
+					</div>
+				) : null}
+				<SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
+					{JSON.stringify(mediaType.example, null, 2)}
+				</SyntaxHighlighter>
+			</>
+		);
+	}
 
-        return (
-            <>
-                {requestBodySchemaRef ? (
-                    <div className="p-4 text-sm">Schema:{" "}
-                        <SchemaLink
-                            schemaName={exampleSchema}
-                            schema={schema}/>
-                    </div>) : null}
-                <SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
-                    {JSON.stringify(mediaType.example, null, 2)}
-                </SyntaxHighlighter>
-            </>
+	// 2. 複数の `examples` がある場合の処理
+	if (mediaType.examples) {
+		const exampleNames = Object.keys(mediaType.examples);
+		const [selectedExample, setSelectedExample] = useState(exampleNames[0]);
 
-        );
-    }
+		if (!exampleNames.length) {
+			return (
+				<p className="text-sm text-muted-foreground">No example available.</p>
+			);
+		}
 
-    // 2. 複数の `examples` がある場合の処理
-    if (mediaType.examples) {
-        const exampleNames = Object.keys(mediaType.examples);
-        const [selectedExample, setSelectedExample] = useState(exampleNames[0]);
+		const currentExample = mediaType.examples[selectedExample];
 
-        if (!exampleNames.length) {
-            return (
-                <p className="text-sm text-muted-foreground">No example available.</p>
-            );
-        }
+		return (
+			<div className="space-y-2">
+				<Select value={selectedExample} onValueChange={setSelectedExample}>
+					<SelectTrigger>
+						<SelectValue placeholder="Select an example" />
+					</SelectTrigger>
+					<SelectContent>
+						{exampleNames.map((name) => (
+							<SelectItem key={name} value={name}>
+								{name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 
-        const currentExample = mediaType.examples[selectedExample];
+				{currentExample.summary && (
+					<p className="text-sm text-muted-foreground">
+						{currentExample.summary}
+					</p>
+				)}
+				{requestBodySchemaRef ? (
+					<div className="p-4 text-sm">
+						Schema: <SchemaLink schemaName={exampleSchema} schema={schema} />
+					</div>
+				) : null}
+				<SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
+					{JSON.stringify(currentExample.value, null, 2)}
+				</SyntaxHighlighter>
+			</div>
+		);
+	}
 
-        return (
-            <div className="space-y-2">
-                <Select value={selectedExample} onValueChange={setSelectedExample}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select an example"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {exampleNames.map((name) => (
-                            <SelectItem key={name} value={name}>
-                                {name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-
-                {currentExample.summary && (
-                    <p className="text-sm text-muted-foreground">
-                        {currentExample.summary}
-                    </p>
-                )}
-                {requestBodySchemaRef ? (
-                    <div className="p-4 text-sm">Schema:{" "}
-                        <SchemaLink
-                            schemaName={exampleSchema}
-                            schema={schema}/>
-                    </div>) : null}
-                <SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
-                    {JSON.stringify(currentExample.value, null, 2)}
-                </SyntaxHighlighter>
-            </div>
-        );
-    }
-
-    return <p className="text-sm text-muted-foreground">No example available.</p>;
+	return <p className="text-sm text-muted-foreground">No example available.</p>;
 }

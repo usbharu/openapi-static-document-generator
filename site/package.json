@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "serve out",
-    "lint": "next lint"
+    "lint": "biome lint --write --unsafe src",
+    "format": "biome format src --write"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",
