@@ -3,11 +3,12 @@ import {notFound} from "next/navigation";
 import {SchemaCard} from "@/components/schema-card";
 import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
 import {vscDarkPlus} from "react-syntax-highlighter/dist/esm/styles/prism";
+import {Badge} from "@/components/ui/badge";
 
 type SchemaPageProps = {
     params: Promise<{
-        apiName:string,
-        version:string,
+        apiName: string,
+        version: string,
         schema: string
     }>
 }
@@ -29,30 +30,41 @@ export async function generateStaticParams() {
             ));
         });
     });
-    console.log(a)
+    // console.log(a)
     return a
 }
 
-export default async function SchemaPage({params}: SchemaPageProps){
+export default async function SchemaPage({params}: SchemaPageProps) {
     const p = await params;
 
-    const apiSpec = getApiSpec(p.apiName,p.version);
+    const apiSpec = getApiSpec(p.apiName, p.version);
 
     const schema = apiSpec?.components?.schemas?.[p.schema];
 
-    const schemaExamples = getApiExamples(p.apiName,p.version,p.schema)
+    const schemaExamples = getApiExamples(p.apiName, p.version, p.schema)
 
     if (!schema) {
         return notFound()
     }
 //todo デザイン
     return (
-        <div>
+        <div className={""}>
+            <h1 className={"flex items-center gap-4 text-4xl font-bold"}>
+                <span>{p.schema}</span>
+                <span>-</span>
+                <span>{apiSpec?.info.title}</span>
+                <Badge className={"text-4xl text-white font-bold"}>
+                    {p.version}
+                </Badge>
+            </h1>
             <SchemaCard schema={schema} name={p.schema}/>
-            {schemaExamples.map(value => (
-                <SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
-                    {JSON.stringify(value.value, null, 2)}
-                </SyntaxHighlighter>
+            {schemaExamples.map((value, index) => (
+                <div key={index} className={"m-4"}>
+                    <p>{value.description}</p>
+                    <SyntaxHighlighter language="json" style={vscDarkPlus} PreTag="div">
+                        {JSON.stringify(value.value, null, 2)}
+                    </SyntaxHighlighter>
+                </div>
             ))}
 
         </div>

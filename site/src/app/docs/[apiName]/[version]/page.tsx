@@ -23,7 +23,7 @@ export async function generateStaticParams() {
             version: version.version,
         }))
     );
-    console.log(paths);
+    // console.log(paths);
     return paths;
 }
 

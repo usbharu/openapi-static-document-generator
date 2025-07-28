@@ -7,6 +7,6 @@ type SchemaLinkProps = {
 
 export function SchemaLink({schemaName,schema}: SchemaLinkProps) {
     return (
-        <a href={`#schema-${schemaName}`} className={"font-mono hover:underline"} title={schema && schema.description}>{schemaName}</a>
+        <a href={`../schemas/${schemaName}`} className={"font-mono hover:underline"} title={schema && schema.description}>{schemaName}</a>
     )
 }

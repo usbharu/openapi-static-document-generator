@@ -22,7 +22,7 @@ export async function generateStaticParams() {
             ));
         });
     });
-    console.log(a)
+    // console.log(a)
     return a
 }
 
@@ -38,7 +38,7 @@ export default async function PathApiDocument({params}: PathApiDocumentPageProps
     const pathString = "/" + decodeFromBase64Url(p.path)
     const spec = getApiSpec(p.apiName, p.version);
     const path = spec?.paths[pathString]
-    console.log(path)
+    // console.log(path)
     if (!spec) {
         notFound()
     }
