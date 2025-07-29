@@ -1,4 +1,4 @@
-import { SchemaLink } from "@/components/schema/SchemaLink"; // インポート追加
+import { SchemaLink } from "@/components/schema/schema-link"; // インポート追加
 import { Badge } from "@/components/ui/badge";
 import {
   Table,

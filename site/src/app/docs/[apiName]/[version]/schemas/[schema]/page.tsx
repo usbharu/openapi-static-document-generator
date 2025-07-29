@@ -14,9 +14,8 @@ type SchemaPageProps = {
 };
 
 export async function generateStaticParams() {
-  //
   const { apis } = getApiData();
-  const a = apis.flatMap(api => {
+  return apis.flatMap(api => {
     return api.versions.flatMap(version => {
       if (version.spec.components?.schemas == null) {
         return [];
@@ -28,23 +27,18 @@ export async function generateStaticParams() {
       }));
     });
   });
-  // console.log(a)
-  return a;
 }
 
 export default async function SchemaPage({ params }: SchemaPageProps) {
   const p = await params;
-
   const apiSpec = getApiSpec(p.apiName, p.version);
-
   const schema = apiSpec?.components?.schemas?.[p.schema];
-
   const schemaExamples = getApiExamples(p.apiName, p.version, p.schema);
 
   if (!schema) {
     return notFound();
   }
-  //todo デザイン
+
   return (
     <div className={""}>
       <h1 className={"flex items-center gap-4 font-bold text-4xl"}>

@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import type React from "react";
 import { AppShell } from "@/components/app-shell";
 import { getApiData } from "@/lib/api-loader"; // ★ インポート
 import { cn } from "@/lib/utils";
@@ -16,7 +17,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { apis } = getApiData(); // ★ サーバーコンポーネントでデータを取得
+  const { apis } = getApiData();
 
   return (
     <html lang="ja" suppressHydrationWarning>
@@ -26,7 +27,6 @@ export default function RootLayout({
           inter.className,
         )}
       >
-        {/* ★ 取得したデータをpropsで渡す */}
         <AppShell apis={apis}>{children}</AppShell>
       </body>
     </html>

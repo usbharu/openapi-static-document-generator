@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { SchemaLink } from "@/components/schema/SchemaLink";
+import { SchemaLink } from "@/components/schema/schema-link";
 import {
   Select,
   SelectContent,

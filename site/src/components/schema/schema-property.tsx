@@ -1,10 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { SchemaProperty as SchemaPropertyType } from "@/lib/types";
-import { TypeHighlighter } from "../type-highlighter"; // インポート追加
-
-// $refからスキーマ名を取得
-const getSchemaName = (ref: string) => ref.split("/").pop() || "";
+import { getSchemaName } from "@/lib/utils"; // インポート追加
+import { TypeHighlighter } from "../type-highlighter";
 
 interface SchemaPropertyProps {
   name: string;

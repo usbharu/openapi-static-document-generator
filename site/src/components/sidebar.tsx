@@ -8,21 +8,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { API } from "@/lib/types"; // ★ 型をインポート
+import type { API } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SidebarToggle } from "./sidebar-toggle";
-
-// import { getApiData } from "@/lib/api-loader"; // ← ★ 削除！
 
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
-  apis: API[]; // ★ propsの型定義を追加
+  apis: API[];
 }
 
 export function Sidebar({ isCollapsed, onToggle, apis }: SidebarProps) {
-  // ★ apisを受け取る
-  // const { apis } = getApiData(); // ← ★ 削除！
   const pathname = usePathname();
 
   return (

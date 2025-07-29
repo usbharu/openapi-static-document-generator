@@ -16,8 +16,6 @@ import {
   httpMethodComparator,
 } from "@/lib/utils";
 
-// ... (generateStaticParams, getApiSpec functions are unchanged) ...
-
 interface PageProps {
   params: Promise<{
     apiName: string;
@@ -27,14 +25,12 @@ interface PageProps {
 
 export async function generateStaticParams() {
   const { apis } = getApiData();
-  const paths = apis.flatMap(api =>
+  return apis.flatMap(api =>
     api.versions.map(version => ({
       apiName: api.name,
       version: version.version,
     })),
   );
-  // console.log(paths);
-  return paths;
 }
 
 export default async function ApiDocumentPage({ params }: PageProps) {

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { EndpointGroup } from "@/components/endpoint/EndpointGroup";
+import { EndpointGroup } from "@/components/endpoint/endpoint-group";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -17,9 +17,8 @@ import {
 } from "@/lib/utils";
 
 export async function generateStaticParams() {
-  //
   const { apis } = getApiData();
-  const a = apis.flatMap(api => {
+  return apis.flatMap(api => {
     return api.versions.flatMap(version => {
       if (version.spec.paths == null) {
         return [{ apiName: api.name, version: version.version, path: "u" }];
@@ -31,7 +30,6 @@ export async function generateStaticParams() {
       }));
     });
   });
-  return a;
 }
 
 type PathApiDocumentPageProps = {
@@ -49,7 +47,7 @@ export default async function PathApiDocument({
   const pathString = `/${decodeFromBase64Url(p.path)}`;
   const spec = getApiSpec(p.apiName, p.version);
   const path = spec?.paths[pathString];
-  // console.log(path)
+
   if (!spec) {
     notFound();
   }
@@ -105,7 +103,6 @@ export default async function PathApiDocument({
           <Badge className={"font-bold text-4xl text-white"}>{p.version}</Badge>
         </h1>
 
-        {/*Todo GETなどのメソッドのリンクにしたバッジを横に並べる あとsummaryを全メソッド分並べる */}
         <Table>
           <TableHeader>
             <TableRow>
