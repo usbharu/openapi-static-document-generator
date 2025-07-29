@@ -1,11 +1,8 @@
 name: build-cli.yaml
 on:
   push:
-    branches:
-      - "master"
-    paths:
-      - cli
-  workflow_dispatch:
+    tags:
+      - "v*"
 
 
 permissions:
