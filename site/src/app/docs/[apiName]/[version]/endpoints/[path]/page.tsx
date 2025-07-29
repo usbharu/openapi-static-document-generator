@@ -21,7 +21,7 @@ export async function generateStaticParams() {
   return apis.flatMap(api => {
     return api.versions.flatMap(version => {
       if (version.spec.paths == null) {
-        return [{ apiName: api.name, version: version.version, path: "u" }];
+        return [];
       }
       return Object.keys(version.spec.paths).map(path => ({
         apiName: api.name,

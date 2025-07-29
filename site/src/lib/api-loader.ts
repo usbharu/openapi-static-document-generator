@@ -75,6 +75,6 @@ export function getApiExamples(
   if (!apiSpecCache) {
     getApiSpec(apiName, version);
   }
-  // @ts-ignore
-  return apiSpecCache[apiName][version].examples[schemaName];
+
+  return apiSpecCache?.[apiName][version]?.examples[schemaName] ?? [];
 }
