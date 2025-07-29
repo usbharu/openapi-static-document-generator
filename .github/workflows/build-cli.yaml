@@ -19,4 +19,6 @@ jobs:
         working-directory: cli
       - run: gh release create ${{github.ref_name}} --generate-notes cli
         working-directory: cli
+        env:
+          GH_TOKEN: ${{ github.token }}
 
