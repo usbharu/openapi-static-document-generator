@@ -32,6 +32,7 @@ type Version struct {
 type Example struct {
 	Description string      `json:"description"`
 	Value       interface{} `json:"value"`
+	Key         string      `json:"key"`
 }
 
 // GenerateJSON は解析済みのドキュメントを受け取り、単一のJSONファイルとして出力します。
@@ -112,7 +113,7 @@ func newSchemaDataCollector() *schemaDataCollector {
 }
 
 // addExamples はExample/Examplesを追加します。
-func (c *schemaDataCollector) addExamples(schemaName string, example Example, examples map[string]*openapi3.ExampleRef) {
+func (c *schemaDataCollector) addExamples(schemaName string, schemaKey string, example Example, examples map[string]*openapi3.ExampleRef) {
 	if schemaName == "" {
 		return
 	}
@@ -125,6 +126,7 @@ func (c *schemaDataCollector) addExamples(schemaName string, example Example, ex
 			collected = append(collected, Example{
 				Description: exRef.Value.Description,
 				Value:       exRef.Value.Value,
+				Key:         schemaKey,
 			})
 		}
 	}
@@ -149,11 +151,11 @@ func extractSchemaData(doc *openapi3.T) map[string][]Example {
 	if doc.Components != nil && doc.Components.Schemas != nil {
 		for name, schemaRef := range doc.Components.Schemas {
 			if schemaRef != nil && schemaRef.Value != nil {
-				//collector.addDescription(name, schemaRef.Value.Description)
-				collector.addExamples(name,
+				collector.addExamples(name, "",
 					Example{
 						Description: schemaRef.Value.Description,
 						Value:       schemaRef.Value.Example,
+						Key:         fmt.Sprintf("components.schemas.%s", name),
 					}, nil)
 			}
 		}
@@ -161,7 +163,7 @@ func extractSchemaData(doc *openapi3.T) map[string][]Example {
 
 	// 2. Paths内を探索して、スキーマが「使われている場所」の情報を収集
 	if doc.Paths != nil {
-		for _, pathItem := range doc.Paths.Map() {
+		for path, pathItem := range doc.Paths.Map() {
 			if pathItem == nil {
 				continue
 			}
@@ -171,22 +173,23 @@ func extractSchemaData(doc *openapi3.T) map[string][]Example {
 				"DELETE": pathItem.Delete, "PATCH": pathItem.Patch,
 			}
 
-			for _, op := range operations {
+			for operation, op := range operations {
 				if op == nil {
 					continue
 				}
 
 				// Parameters
-				for _, paramRef := range op.Parameters {
+				for parameter, paramRef := range op.Parameters {
 					if paramRef == nil || paramRef.Value == nil {
 						continue
 					}
 					if paramRef.Value.Schema != nil {
 						schemaName := getSchemaNameFromRef(paramRef.Value.Schema.Ref)
-						//collector.addDescription(schemaName, paramRef.Value.Description)
-						collector.addExamples(schemaName, Example{
+						key := fmt.Sprintf("components.paths.%s.%s.parameters.%d.%s", path, operation, parameter, schemaName)
+						collector.addExamples(schemaName, key, Example{
 							Description: paramRef.Value.Description,
 							Value:       paramRef.Value.Example,
+							Key:         key,
 						}, paramRef.Value.Examples)
 					}
 				}
@@ -194,15 +197,17 @@ func extractSchemaData(doc *openapi3.T) map[string][]Example {
 				// RequestBody
 				if op.RequestBody != nil && op.RequestBody.Value != nil {
 					//collector.addDescriptionToContent(op.RequestBody.Value.Content, op.RequestBody.Value.Description)
-					collector.addExampleToContent(op.RequestBody.Value.Content)
+					key := fmt.Sprintf("components.paths.%s.%s.requestBody", path, operation)
+					collector.addExampleToContent(key, op.RequestBody.Value.Content)
 				}
 
 				// Responses
 				if op.Responses != nil {
-					for _, respRef := range op.Responses.Map() {
+					for code, respRef := range op.Responses.Map() {
 						if respRef != nil && respRef.Value != nil {
 							//collector.addDescriptionToContent(respRef.Value.Content, respRef.Value.Description)
-							collector.addExampleToContent(respRef.Value.Content)
+							key := fmt.Sprintf("components.paths.%s.%s.response.%s", path, operation, code)
+							collector.addExampleToContent(key, respRef.Value.Content)
 						}
 					}
 				}
@@ -227,14 +232,19 @@ func (c *schemaDataCollector) addDescriptionToContent(content openapi3.Content) 
 }
 
 // addExampleToContent はContentオブジェクト内のスキーマにExampleを追加します。
-func (c *schemaDataCollector) addExampleToContent(content openapi3.Content) {
+func (c *schemaDataCollector) addExampleToContent(key string, content openapi3.Content) {
 	if content == nil {
 		return
 	}
 	for mimeType, mediaType := range content {
 		if mediaType != nil && mediaType.Schema != nil {
 			schemaName := getSchemaNameFromRef(mediaType.Schema.Ref)
-			c.addExamples(schemaName, Example{Description: mimeType, Value: mediaType.Example}, mediaType.Examples)
+			key := fmt.Sprintf("%s.%s.%s", key, mimeType, schemaName)
+			c.addExamples(schemaName, key, Example{
+				Description: mimeType,
+				Value:       mediaType.Example,
+				Key:         key,
+			}, mediaType.Examples)
 		}
 	}
 }
