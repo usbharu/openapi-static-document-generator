@@ -1,9 +1,12 @@
 package parser
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/usbharu/openapi-static-document-generator/cli/internal/downloader"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -11,6 +14,7 @@ import (
 type APIDocument struct {
 	APIName string
 	Version string
+	Info    downloader.Info
 	Doc     *openapi3.T
 }
 
@@ -23,6 +27,9 @@ func ParseAPIDocs(rootDir string) ([]*APIDocument, error) {
 		}
 
 		if d.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(path, "info.json") {
 			return nil
 		}
 
@@ -43,10 +50,19 @@ func ParseAPIDocs(rootDir string) ([]*APIDocument, error) {
 		apiName := parts[len(parts)-2]
 		apiVerison := parts[len(parts)-1]
 
+		infoPath := filepath.Join(filepath.Dir(path), "Info.json")
+		info := downloader.Info{}
+
+		readFile, err := os.ReadFile(infoPath)
+		if err == nil {
+			json.Unmarshal(readFile, &info)
+		}
+
 		documents = append(documents, &APIDocument{
 			APIName: apiName,
 			Version: apiVerison,
 			Doc:     file,
+			Info:    info,
 		})
 
 		return nil

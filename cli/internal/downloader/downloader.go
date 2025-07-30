@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-git/go-git/v5"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // processCommitHistory はリポジトリのコミット履歴を遡り、OpenAPIファイルを収集します。
@@ -86,10 +88,23 @@ func processCommitHistory(repo *git.Repository, outputPath string, maxVersions i
 			// ファイル名からパス部分を除去
 			originalFileName := filepath.Base(f.Name)
 			targetPath := filepath.Join(targetDir, originalFileName)
+			infoPath := filepath.Join(targetDir, "info.json")
 
 			// ファイルを書き込み
 			if err := os.WriteFile(targetPath, contentBytes, 0644); err != nil {
 				return fmt.Errorf("ファイル '%s' への書き込みに失敗しました: %w", targetPath, err)
+			}
+
+			infoBytes, err := json.Marshal(Info{
+				Date: c.Committer.When,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = os.WriteFile(infoPath, infoBytes, 0644)
+			if err != nil {
+				log.Println("infoファイルの書き込みに失敗")
 			}
 
 			fmt.Printf("✔ 保存完了: %s (バージョン: %s) [コミット: %s]\n", doc.Info.Title, apiVersion, c.Hash.String()[:7])
@@ -137,4 +152,8 @@ func Download(repoURL string, outputDirDownload string, maxVersions int) {
 	if err != nil {
 		log.Fatalf("エラー: コミット履歴の処理中にエラーが発生しました: %v", err)
 	}
+}
+
+type Info struct {
+	Date time.Time `json:"date"`
 }

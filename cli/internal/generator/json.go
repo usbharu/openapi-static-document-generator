@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/usbharu/openapi-static-document-generator/cli/internal/downloader"
 	"github.com/usbharu/openapi-static-document-generator/cli/internal/parser"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -25,6 +26,7 @@ type API struct {
 
 type Version struct {
 	Version        string               `json:"version"`
+	Info           downloader.Info      `json:"info"`
 	Spec           interface{}          `json:"spec"` // OpenAPIの中身をそのまま格納
 	SchemaExamples map[string][]Example `json:"schemaExamples"`
 }
@@ -79,6 +81,7 @@ func aggregateDocs(docs []*parser.APIDocument) (*SiteData, error) {
 		version := Version{
 			Version:        doc.Version,
 			Spec:           specData,
+			Info:           doc.Info,
 			SchemaExamples: allExamples,
 		}
 		apiMap[doc.APIName] = append(apiMap[doc.APIName], version)
