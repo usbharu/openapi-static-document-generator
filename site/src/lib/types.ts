@@ -10,8 +10,13 @@ export interface API {
 export interface Version {
   version: string;
   spec: OpenAPISpec;
+  info: GitInfo;
   schemaExamples: { [path: string]: any };
 }
+
+type GitInfo = {
+  date: string;
+};
 
 /**
  * このファイルは、OpenAPIの仕様をTypeScriptの型として定義します。

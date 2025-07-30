@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Accordion,
   AccordionContent,
@@ -10,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import type { API } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { SidebarApi } from "./sidebar/sidebar-api";
 import { SidebarToggle } from "./sidebar-toggle";
 
 interface SidebarProps {
@@ -19,8 +18,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle, apis }: SidebarProps) {
-  const pathname = usePathname();
-
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -58,27 +55,7 @@ export function Sidebar({ isCollapsed, onToggle, apis }: SidebarProps) {
                     {api.name}
                   </AccordionTrigger>
                   <AccordionContent>
-                    <ul className="space-y-1">
-                      {api.versions.map(version => {
-                        const href = `/docs/${api.name}/${version.version}`;
-                        const isActive = pathname === href;
-                        return (
-                          <li key={version.version}>
-                            <Link
-                              href={href}
-                              className={cn(
-                                "block rounded-md px-3 py-1.5 text-sm transition-colors",
-                                isActive
-                                  ? "bg-primary text-primary-foreground"
-                                  : "hover:bg-muted",
-                              )}
-                            >
-                              {version.version}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    <SidebarApi api={api}></SidebarApi>
                   </AccordionContent>
                 </AccordionItem>
               ),
