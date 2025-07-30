@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -28,7 +29,9 @@ export function Sidebar({ isCollapsed, onToggle, apis }: SidebarProps) {
         )}
       >
         {!isCollapsed && (
-          <h1 className="font-bold text-lg tracking-tight">API Docs</h1>
+          <Link href={"/"}>
+            <h1 className="font-bold text-lg tracking-tight">API Docs</h1>
+          </Link>
         )}
         <SidebarToggle isCollapsed={isCollapsed} onToggle={onToggle} />
       </div>
