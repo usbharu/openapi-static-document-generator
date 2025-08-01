@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { OpenAPISpec, SiteData } from "./types";
+import type { Change, OpenAPISpec, SiteData } from "./types";
 
 let cache: SiteData | undefined;
 
@@ -36,6 +36,9 @@ type ApiSpecMap = {
           value: any;
         }[];
       };
+      diffs: {
+        [version: string]: Change[];
+      };
     };
   };
 };
@@ -58,6 +61,7 @@ export function getApiSpec(
       return (apiSpecCache[name.name][version.version] = {
         spec: version.spec,
         examples: version.schemaExamples,
+        diffs: version.diffs,
       });
     });
   });
@@ -77,4 +81,16 @@ export function getApiExamples(
   }
 
   return apiSpecCache?.[apiName][version]?.examples[schemaName] ?? [];
+}
+
+export function getApiDiff(
+  apiName: string,
+  newVersion: string,
+  oldVersion: string,
+): Change[] {
+  if (!apiSpecCache) {
+    getApiSpec(apiName, newVersion);
+  }
+
+  return apiSpecCache?.[apiName][newVersion]?.diffs[oldVersion] ?? [];
 }

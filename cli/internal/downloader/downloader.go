@@ -169,6 +169,5 @@ type Change struct {
 	OperationId string `json:"operationId"`
 	Path        string `json:"path"`
 	Section     string `json:"section"`
-	Source      string `json:"source"`
 	Text        string `json:"text"`
 }
