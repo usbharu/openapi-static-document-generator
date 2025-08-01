@@ -157,3 +157,18 @@ func Download(repoURL string, outputDirDownload string, maxVersions int) {
 type Info struct {
 	Date time.Time `json:"date"`
 }
+
+type Diffs = map[string]Diff
+
+type Diff = []Change
+
+type Change struct {
+	Id          string `json:"id"`
+	Level       int    `json:"level"`
+	Operation   string `json:"operation"`
+	OperationId string `json:"operationId"`
+	Path        string `json:"path"`
+	Section     string `json:"section"`
+	Source      string `json:"source"`
+	Text        string `json:"text"`
+}

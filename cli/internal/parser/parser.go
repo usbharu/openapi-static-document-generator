@@ -15,6 +15,7 @@ type APIDocument struct {
 	APIName string
 	Version string
 	Info    downloader.Info
+	Diffs   downloader.Diffs
 	Doc     *openapi3.T
 }
 
@@ -30,6 +31,9 @@ func ParseAPIDocs(rootDir string) ([]*APIDocument, error) {
 			return nil
 		}
 		if strings.HasSuffix(path, "info.json") {
+			return nil
+		}
+		if strings.HasSuffix(path, "diff.json") {
 			return nil
 		}
 
@@ -50,12 +54,20 @@ func ParseAPIDocs(rootDir string) ([]*APIDocument, error) {
 		apiName := parts[len(parts)-2]
 		apiVerison := parts[len(parts)-1]
 
-		infoPath := filepath.Join(filepath.Dir(path), "Info.json")
+		infoPath := filepath.Join(filepath.Dir(path), "info.json")
 		info := downloader.Info{}
+
+		diffPath := filepath.Join(filepath.Dir(path), "diff.json")
+		diff := downloader.Diffs{}
 
 		readFile, err := os.ReadFile(infoPath)
 		if err == nil {
 			json.Unmarshal(readFile, &info)
+		}
+
+		diffFile, err := os.ReadFile(diffPath)
+		if err == nil {
+			json.Unmarshal(diffFile, &diff)
 		}
 
 		documents = append(documents, &APIDocument{
@@ -63,6 +75,7 @@ func ParseAPIDocs(rootDir string) ([]*APIDocument, error) {
 			Version: apiVerison,
 			Doc:     file,
 			Info:    info,
+			Diffs:   diff,
 		})
 
 		return nil
