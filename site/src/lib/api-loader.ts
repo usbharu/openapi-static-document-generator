@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Change, OpenAPISpec, SiteData } from "./types";
+import type {Change, OpenAPISpec, SiteData} from "./types";
 
 let cache: SiteData | undefined;
 
@@ -20,7 +20,7 @@ export const getApiData = (): SiteData => {
   } catch (error) {
     console.error("api-data.json の読み込みに失敗しました。", error);
     // データが読み込めない場合は空の構造を返す
-    return { apis: [] };
+    return {apis: []};
   }
 };
 
@@ -50,7 +50,7 @@ export function getApiSpec(
   if (apiSpecCache) {
     return apiSpecCache[apiName][version].spec;
   }
-  const { apis } = getApiData();
+  const {apis} = getApiData();
   apiSpecCache = {};
   apis.forEach(name => {
     // @ts-ignore
@@ -93,4 +93,8 @@ export function getApiDiff(
   }
 
   return apiSpecCache?.[apiName][newVersion]?.diffs[oldVersion] ?? [];
+}
+
+export function getApiVersions(apiName: string): string[] {
+  return getApiData().apis.find(value => value.name === apiName)?.versions?.map(version => version.version) ?? [];
 }
