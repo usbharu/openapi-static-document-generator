@@ -27,6 +27,7 @@ type API struct {
 type Version struct {
 	Version        string               `json:"version"`
 	Info           downloader.Info      `json:"info"`
+	Diffs          downloader.Diffs     `json:"diffs"`
 	Spec           interface{}          `json:"spec"` // OpenAPIの中身をそのまま格納
 	SchemaExamples map[string][]Example `json:"schemaExamples"`
 }
@@ -82,6 +83,7 @@ func aggregateDocs(docs []*parser.APIDocument) (*SiteData, error) {
 			Version:        doc.Version,
 			Spec:           specData,
 			Info:           doc.Info,
+			Diffs:          doc.Diffs,
 			SchemaExamples: allExamples,
 		}
 		apiMap[doc.APIName] = append(apiMap[doc.APIName], version)

@@ -17,6 +17,9 @@ export default function Home() {
           OSDGでは複数のOpen
           API仕様書の複数のバージョンを横断して閲覧することができます。左のサイドバーからAPIの定義書とバージョンを選べますよ!
         </p>
+        <p>
+          また、左のサイドバーからCompareを選ぶことでバージョンごとの比較ができます!
+        </p>
       </div>
       <div className="flex flex-auto flex-wrap gap-4">
         {apiData.apis.map(value => {

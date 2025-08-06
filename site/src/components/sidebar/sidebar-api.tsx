@@ -67,14 +67,16 @@ export function SidebarApi({ api }: SidebarApiProps) {
           Summary
         </Link>
       </li>
-      {/*<li>*/}
-      {/*  <Link*/}
-      {/*    href={`/docs/${api.name}/${selectedVersion}/endpoints`}*/}
-      {/*    className={*/}
-      {/*      "block rounded-md px-3 py-3 text-sm transition-colors hover:bg-muted focus:bg-primary focus:text-primary-foreground"*/}
-      {/*    }*/}
-      {/*  >Endpoints</Link>*/}
-      {/*</li>*/}
+      <li>
+        <Link
+          href={`/compare/${api.name}/${selectedVersion}/${api.versions.at(-1)?.version}`}
+          className={
+            "block rounded-md px-3 py-3 text-sm transition-colors hover:bg-muted focus:bg-primary focus:text-primary-foreground"
+          }
+        >
+          Compare
+        </Link>
+      </li>
     </ul>
   );
 }

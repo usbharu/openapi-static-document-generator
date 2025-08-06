@@ -11,6 +11,7 @@ export interface Version {
   version: string;
   spec: OpenAPISpec;
   info: GitInfo;
+  diffs: Diff;
   schemaExamples: { [path: string]: any };
 }
 
@@ -130,3 +131,15 @@ export interface SchemaProperty {
 export interface Schema extends SchemaProperty {
   // Schemaは基本的にSchemaPropertyと同じだが、トップレベルの定義として使用
 }
+
+export type Diff = { [Version: string]: Change[] };
+
+export type Change = {
+  id: string;
+  level: number;
+  operation: string;
+  operationId: string;
+  path: string;
+  section: string;
+  text: string;
+};
