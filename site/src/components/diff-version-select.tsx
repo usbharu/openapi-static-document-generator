@@ -18,7 +18,7 @@ type DiffVersionSelectProps = {
 export function DiffVersionSelect(props: DiffVersionSelectProps) {
   const router = useRouter();
 
-  const handleVersionSelect = url => {
+  const handleVersionSelect = (url:string) => {
     if (url) {
       router.push(url);
     }
