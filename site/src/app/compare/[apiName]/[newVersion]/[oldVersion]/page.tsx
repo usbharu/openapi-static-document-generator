@@ -1,17 +1,28 @@
-import {getApiData, getApiDiff, getApiSpec, getApiVersions} from "@/lib/api-loader";
-import {Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {SchemaDiff} from "@/components/schema/schema-diff";
-import {Operation} from "@/lib/types";
-import {Button} from "@/components/ui/button";
 import Link from "next/link";
-import {encodeToBase64Url} from "@/lib/utils";
-import {DiffVersionSelect} from "@/components/diff-version-select";
-
+import { DiffVersionSelect } from "@/components/diff-version-select";
+import { SchemaDiff } from "@/components/schema/schema-diff";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  getApiData,
+  getApiDiff,
+  getApiSpec,
+  getApiVersions,
+} from "@/lib/api-loader";
+import type { Operation } from "@/lib/types";
+import { encodeToBase64Url } from "@/lib/utils";
 
 export async function generateStaticParams(): Promise<
   { apiName: string; newVersion: string; oldVersion: string }[]
 > {
-  const {apis} = getApiData();
+  const { apis } = getApiData();
   return apis.flatMap(api =>
     api.versions.flatMap(newA =>
       api.versions.map(old => ({
@@ -31,7 +42,12 @@ interface ComparePageProps {
   }>;
 }
 
-const getSpecByPath = (apiName: string, version: string, path: string, operation: "get" | "post" | "delete" | "put" | "patch" | string): Operation | undefined => {
+const getSpecByPath = (
+  apiName: string,
+  version: string,
+  path: string,
+  operation: "get" | "post" | "delete" | "put" | "patch" | string,
+): Operation | undefined => {
   const apiSpec = getApiSpec(apiName, version);
 
   switch (operation.toLowerCase()) {
@@ -48,19 +64,21 @@ const getSpecByPath = (apiName: string, version: string, path: string, operation
     default:
       return undefined;
   }
-}
+};
 
 const getComponents = (apiName: string, version: string) => {
   const apiSpec = getApiSpec(apiName, version);
   return apiSpec?.components;
-}
+};
 
-export default async function ComparePage({params}: ComparePageProps) {
+export default async function ComparePage({ params }: ComparePageProps) {
   const p = await params;
 
   const changes = getApiDiff(p.apiName, p.newVersion, p.oldVersion);
 
-  const otherVersions = getApiVersions(p.apiName).filter(value => value !== p.newVersion)
+  const otherVersions = getApiVersions(p.apiName).filter(
+    value => value !== p.newVersion,
+  );
 
   return (
     <div>
@@ -70,27 +88,48 @@ export default async function ComparePage({params}: ComparePageProps) {
       <p>{changes.length}件の変更</p>
       <p>
         <Button variant="link" asChild>
-          <Link href={`/docs/${p.apiName}/${p.newVersion}`}>{p.newVersion}を見る</Link>
+          <Link href={`/docs/${p.apiName}/${p.newVersion}`}>
+            {p.newVersion}を見る
+          </Link>
         </Button>
         <Button variant="link" asChild>
-          <Link href={`/docs/${p.apiName}/${p.oldVersion}`}>{p.oldVersion}を見る</Link>
+          <Link href={`/docs/${p.apiName}/${p.oldVersion}`}>
+            {p.oldVersion}を見る
+          </Link>
         </Button>
         <Button variant="link" asChild>
-          <Link href={`/compare/${p.apiName}/${p.oldVersion}/${p.newVersion}`}>左右を入れ替える</Link>
+          <Link href={`/compare/${p.apiName}/${p.oldVersion}/${p.newVersion}`}>
+            左右を入れ替える
+          </Link>
         </Button>
-        <span className={"inline-block"}><DiffVersionSelect apiName={p.apiName} newVersion={p.newVersion} otherVersions={otherVersions}/></span>
+        <span className={"inline-block"}>
+          <DiffVersionSelect
+            apiName={p.apiName}
+            newVersion={p.newVersion}
+            otherVersions={otherVersions}
+          />
+        </span>
       </p>
       {changes.map((value, index) => {
         let oldValue: any | undefined;
         let newValue: any | undefined;
         if (value.section === "paths") {
-          oldValue = getSpecByPath(p.apiName, p.oldVersion, value.path, value.operation)
-          newValue = getSpecByPath(p.apiName, p.newVersion, value.path, value.operation)
+          oldValue = getSpecByPath(
+            p.apiName,
+            p.oldVersion,
+            value.path,
+            value.operation,
+          );
+          newValue = getSpecByPath(
+            p.apiName,
+            p.newVersion,
+            value.path,
+            value.operation,
+          );
         } else if (value.section === "components") {
-          oldValue = getComponents(p.apiName, p.oldVersion)
-          newValue = getComponents(p.apiName, p.newVersion)
+          oldValue = getComponents(p.apiName, p.oldVersion);
+          newValue = getComponents(p.apiName, p.newVersion);
         }
-
 
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
@@ -100,20 +139,36 @@ export default async function ComparePage({params}: ComparePageProps) {
               <CardAction>
                 <Button variant="link" asChild>
                   <Link
-                    href={`/docs/${p.apiName}/${p.oldVersion}/endpoints/${encodeToBase64Url(value.path.substring(1))}`}>{p.oldVersion}</Link>
+                    href={`/docs/${p.apiName}/${p.oldVersion}/endpoints/${encodeToBase64Url(value.path.substring(1))}`}
+                  >
+                    {p.oldVersion}
+                  </Link>
                 </Button>
                 <Button variant="link" asChild>
                   <Link
-                    href={`/docs/${p.apiName}/${p.newVersion}/endpoints/${encodeToBase64Url(value.path.substring(1))}`}>{p.newVersion}</Link>
+                    href={`/docs/${p.apiName}/${p.newVersion}/endpoints/${encodeToBase64Url(value.path.substring(1))}`}
+                  >
+                    {p.newVersion}
+                  </Link>
                 </Button>
               </CardAction>
-              <CardDescription>Section: {value.section}<br/>{value.operation ? (
-                <span>{value.operation}: {value.path}</span>) : null}
+              <CardDescription>
+                Section: {value.section}
+                <br />
+                {value.operation ? (
+                  <span>
+                    {value.operation}: {value.path}
+                  </span>
+                ) : null}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SchemaDiff spec1Title={p.oldVersion} spec2Title={p.newVersion} spec1={oldValue}
-                          spec2={newValue}></SchemaDiff>
+              <SchemaDiff
+                spec1Title={p.oldVersion}
+                spec2Title={p.newVersion}
+                spec1={oldValue}
+                spec2={newValue}
+              ></SchemaDiff>
             </CardContent>
           </Card>
         );
