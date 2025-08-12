@@ -2,7 +2,7 @@ module github.com/usbharu/openapi-static-document-generator/cli
 
 go 1.24
 
-toolchain go1.24.5
+toolchain go1.25.0
 
 require (
 	github.com/getkin/kin-openapi v0.132.0
